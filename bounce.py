@@ -1,13 +1,18 @@
 from enum import Enum
 from ibapi.contract import *
+import datetime
+
+TS_FMT = "%Y-%m-%d %H:%M:%S"
 
 class Action(Enum):
     Buy = 1
     Sell = 2
 
 class SupportType(Enum):
-    Low = 1
-    High = 2
+    Bounce = 1
+    Reject = 2
+    Breakout = 3
+    Breakdown = 4
 
 class BounceOption:
     def __init__(self, equity_symbol, put_call, expiration_date, strike_price):
@@ -33,12 +38,14 @@ class BounceOption:
 class BounceTrade:
     def __init__(
             self,
+            ts,
             signal_symbol,
             threshold_price,
             support_type,
             trade_symbol,
             ticks
             ):
+        self.ts = datetime.datetime.strptime(ts, TS_FMT)
         self.signal_symbol = signal_symbol
         self.threshold_price = threshold_price
         self.support_type = support_type
@@ -53,7 +60,8 @@ class BounceTrade:
         pass
 
     def __str__(self):
-        return  (str(self.signal_symbol) + " "
+        return  (self.ts.strftime(TS_FMT) + " - "
+                + str(self.signal_symbol) + " "
                 + str(self.threshold_price) + " "
                 + str(self.support_type) + " "
                 + str(self.trade_symbol) + " "
@@ -61,7 +69,8 @@ class BounceTrade:
 
 bounces = []
 
-bounces.append(BounceTrade("DKNG", 46.00, SupportType.Low, BounceOption("DKNG", "C", "20211029", 48.00), 0.10))
+bounces.append(BounceTrade("2021-10-23 20:30:00", "DKNG", 46.00, SupportType.Bounce, BounceOption("DKNG", "C", "20211029", 48.00), 0.10))
+
 
 for b in bounces:
     print(b)
