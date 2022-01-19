@@ -1,12 +1,9 @@
 from enum import Enum
+from util import Right, Action, Side
 from ibapi.contract import *
 import datetime
 
 TS_FMT = "%Y-%m-%d %H:%M:%S"
-
-class Action(Enum):
-    Buy = 1
-    Sell = 2
 
 class SupportType(Enum):
     Bounce = 1
@@ -69,8 +66,7 @@ class BounceTrade:
 
 bounces = []
 
-bounces.append(BounceTrade("2021-10-23 20:30:00", "DKNG", 46.00, SupportType.Bounce, BounceOption("DKNG", "C", "20211029", 48.00), 0.10))
-
+bounces.append(BounceTrade("2021-10-23 20:30:00", "DKNG", 46.00, SupportType.Bounce, BounceOption("DKNG", Right.Call, "20211029", 48.00), 0.10))
 
 for b in bounces:
     print(b)
