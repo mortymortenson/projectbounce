@@ -11,9 +11,9 @@ class TrailingVWAP(object):
                     self.volume,
                     self.notional)
 
-    def __init__(self, window, num_buckets=10):
+    def __init__(self, window, resolution):
         self.window = window
-        self.resolution = int(window/num_buckets)
+        self.resolution = resolution
         self.volume = 0
         self.notional = 0
         self.buckets = []
@@ -53,7 +53,7 @@ class TrailingVWAP(object):
 if __name__ == "__main__":
     from test import check
 
-    s = TrailingVWAP(20, num_buckets=5)
+    s = TrailingVWAP(20, 4)
 
     s.onValue(100, 5.00, 1)
     check(s.getVWAP(), 5.00)
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     s.onValue(149, 1.00, 1)
     check(s.getVWAP(), 1.00)
     check(s.getVolume(), 8)
-
+    
     s.onValue(150, 1.00, 1)
     check(s.getVWAP(), 1.00)
     check(s.getVolume(), 3)

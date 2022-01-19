@@ -9,9 +9,9 @@ class SlidingTotal(object):
                     self.start,
                     self.total)
 
-    def __init__(self, window, num_buckets=10):
+    def __init__(self, window, resolution):
         self.window = window
-        self.resolution = int(window/num_buckets)
+        self.resolution = resolution
         self.current = 0
         self.buckets = []
 
@@ -38,7 +38,7 @@ class SlidingTotal(object):
 if __name__ == "__main__":
     from test import check
 
-    s = SlidingTotal(20, num_buckets=5)
+    s = SlidingTotal(20, 4)
 
     s.onValue(100, 1)
     check(s.getCurrent(), 1)
