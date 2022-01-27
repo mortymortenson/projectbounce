@@ -1,8 +1,11 @@
 class AutoList(list):
-    def __init__(self, size = 0):
+    def __init__(self, size=0, default=None):
         list.__init__(self)
-        if size > 0:
-            self.__getitem__(size -1)
+        if default:
+            self._default = default
+        else:
+            self._default = lambda:None
+        self._expand(size)
 
     def check(self, index):
         return 0 <= index < len(self)
@@ -15,7 +18,7 @@ class AutoList(list):
 
     def _expand(self, size):
         while len(self) < size:
-            self.append(None)
+            self.append(self._default())
 
     def __getitem__(self, index):
         self._expand(index + 1)
@@ -50,3 +53,5 @@ if __name__ == '__main__':
     check(l1.check(5), False)
     check(len(l1), 5)
 
+    l2 = AutoList(2, list)
+    check(l2, [[], []])

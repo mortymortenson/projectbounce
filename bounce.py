@@ -1,9 +1,4 @@
-from enum import Enum
-from util import Right, Action, Side
-from ibapi.contract import *
-import datetime
-
-TS_FMT = "%Y-%m-%d %H:%M:%S"
+from symbols import *
 
 class SupportType(Enum):
     Bounce = 1
@@ -11,42 +6,21 @@ class SupportType(Enum):
     Breakout = 3
     Breakdown = 4
 
-class BounceOption:
-    def __init__(self, equity_symbol, put_call, expiration_date, strike_price):
-        contract = Contract()
-        contract.symbol = equity_symbol
-        contract.secType = "OPT"
-        contract.currency = "USD"
-        contract.exchange = "ISE" # TODO
-        contract.lastTradeDateOrContractMonth = expiration_date
-        contract.right = put_call
-        contract.strike = strike_price
-        contract.multiplier = "100"
-        self.contract = contract
-        self.__repr__ = self.__str__
-
-    def __str__(self):
-        return "[%s %s %s %s]" % (
-                self.contract.symbol,
-                self.contract.lastTradeDateOrContractMonth,
-                self.contract.right,
-                self.contract.strike)
-
 class BounceTrade:
     def __init__(
             self,
             ts,
-            signal_symbol,
-            threshold_price,
-            support_type,
-            trade_symbol,
+            signalSymbol,
+            thresholdPrice,
+            supportType,
+            tradeSymbol,
             ticks
             ):
         self.ts = datetime.datetime.strptime(ts, TS_FMT)
-        self.signal_symbol = signal_symbol
-        self.threshold_price = threshold_price
-        self.support_type = support_type
-        self.trade_symbol = trade_symbol
+        self.signalSymbol = signalSymbol
+        self.thresholdPrice = thresholdPrice
+        self.supportType = supportType
+        self.tradeSymbol = tradeSymbol
         self.ticks = ticks
         self.__repr__ = self.__str__
 
@@ -54,25 +28,39 @@ class BounceTrade:
         pass
 
     def onTrade(self, time, price, size, side):
-        pass
+        if self.supportType == SupportType.Bounce:
+            if price <= self.thresholdPrice + self.ticks:
+                self._notify(price)
+        elif self.supportType == SupportType.Reject:
+            if price >= self.thresholdPrice - self.ticks:
+                self._notify(price)
+        elif self.supportType == SupportType.Breakout:
+            pass
+        elif self.supportType == SupportType.Breakdown:
+            pass
+
+    def _notify(self, price):
+        msg =(str(self.supportType) + " "
+                + str(self.signalSymbol) + " "
+                + str(self.thresholdPrice) + " "
+                + str(self.tradeSymbol) + " "
+                + "Last Trade: " + str(price))
+        final = "* " + msg + " *"
+        stars = "*" * len(final)
+        print("\n" + stars + "\n" + final + "\n" + stars + "\n")
 
     def __str__(self):
         return  (self.ts.strftime(TS_FMT) + " - "
-                + str(self.signal_symbol) + " "
-                + str(self.threshold_price) + " "
-                + str(self.support_type) + " "
-                + str(self.trade_symbol) + " "
+                + str(self.signalSymbol) + " "
+                + str(self.thresholdPrice) + " "
+                + str(self.supportType) + " "
+                + str(self.tradeSymbol) + " "
                 + str(self.ticks))
-
 bounces = []
 
-bounces.append(BounceTrade("2021-10-23 20:30:00", "DKNG", 46.00, SupportType.Bounce, BounceOption("DKNG", Right.Call, "20211029", 48.00), 0.10))
+bounces.append(BounceTrade("2021-10-23 20:30:00", BounceEquity("DKNG"), 46.00, SupportType.Bounce, BounceOption("DKNG", Right.Call, "20211029", 48.00), 0.10))
 
-for b in bounces:
-    print(b)
+if __name__ == "__main__":
+    for b in bounces:
+        print(b)
 
-###### TODO ######
-# 3. Subscribe to market data
-# 4. Make a trade
-# 5. Track position
-# 6. Exit position

@@ -33,15 +33,6 @@ from ibapi.account_summary_tags import *
 
 from ibapi.scanner import ScanData
 
-@staticmethod
-def createUSStock(symbol, exchange="SMART"):
-    contract = Contract()
-    contract.symbol = "symbol"
-    contract.secType = "STK"
-    contract.currency = "USD"
-    contract.exchange = exchange
-    return contract
-
 def SetupLogger():
     if not os.path.exists("log"):
         os.makedirs("log")
