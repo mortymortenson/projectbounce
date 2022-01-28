@@ -7,6 +7,8 @@ import argparse
 import datetime
 import collections
 import inspect
+import typing
+import util
 
 import logging
 import time
@@ -32,27 +34,6 @@ from ibapi.tag_value import TagValue
 from ibapi.account_summary_tags import *
 
 from ibapi.scanner import ScanData
-
-def SetupLogger():
-    if not os.path.exists("log"):
-        os.makedirs("log")
-
-    time.strftime("pyibapi.%Y%m%d_%H%M%S.log")
-
-    recfmt = '(%(threadName)s) %(asctime)s.%(msecs)03d %(levelname)s %(filename)s:%(lineno)d %(message)s'
-
-    timefmt = '%y%m%d_%H:%M:%S'
-
-    # logging.basicConfig( level=logging.DEBUG,
-    #                    format=recfmt, datefmt=timefmt)
-    logging.basicConfig(filename=time.strftime("log/pyibapi.%y%m%d_%H%M%S.log"),
-                        filemode="w",
-                        level=logging.INFO,
-                        format=recfmt, datefmt=timefmt)
-    logger = logging.getLogger()
-    console = logging.StreamHandler()
-    console.setLevel(logging.ERROR)
-    logger.addHandler(console)
 
 
 def printWhenExecuting(fn):
@@ -910,8 +891,7 @@ class BApp(BWrapper, BClient):
         print("CompletedOrdersEnd")
     # ! [completedordersend]
 
-def main(AppType):
-    SetupLogger()
+def main(AppType: typing.Callable):
     logging.debug("now is %s", datetime.datetime.now())
     logging.getLogger().setLevel(logging.ERROR)
 
@@ -970,6 +950,31 @@ def main(AppType):
         app.dumpTestCoverageSituation()
         app.dumpReqAnsErrSituation()
 
+def MarketOrder(action:util.Action, quantity:float) -> Order:
+    order = Order()
 
-if __name__ == "__main__":
-    main()
+    if action == util.Action.Buy:
+        order.action = "BUY"
+    elif action == util.Action.Sell:
+        order.action = "SELL"
+    else:
+        raise util.BError("unknown order action")
+
+    order.orderType = "MKT"
+    order.totalQuantity = quantity
+    return order
+
+def LimitOrder(action:str, quantity:float, limitPrice:float) -> Order:
+    order = Order()
+
+    if action == util.Action.Buy:
+        order.action = "BUY"
+    elif action == util.Action.Sell:
+        order.action = "SELL"
+    else:
+        raise util.BError("unknown order action")
+
+    order.orderType = "LMT"
+    order.totalQuantity = quantity
+    order.lmtPrice = limitPrice
+    return order

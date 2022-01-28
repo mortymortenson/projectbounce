@@ -214,11 +214,11 @@ class Order(Object):
     def __str__(self):
         s = "%s,%d,%s:" % (self.orderId, self.clientId, self.permId)
 
-        s += " %s %s %d@%f" % (
+        s += " %s %s %s@%s" % (
             self.orderType,
             self.action,
             self.totalQuantity,
-            self.lmtPrice)
+            str(self.lmtPrice))
 
         s += " %s" % self.tif
 

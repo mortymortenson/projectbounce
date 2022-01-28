@@ -1,24 +1,33 @@
-class TrailingVWAP(object):
+import typing
+
+TimeDelta = typing.TypeVar("Type")
+Time = typing.TypeVar("Type")
+
+class TrailingVWAP(typing.Generic[Time, TimeDelta]):
+    """
+    Keeps a sliding window at a specified resolution to maintain a VWAP and
+    a total on volume within a time window.
+    """
     class Bucket(object):
-        def __init__(self, time):
+        def __init__(self, time: Time):
             self.start = time
             self.volume = 0
             self.notional = 0
 
-        def __str__(self):
+        def __str__(self) -> str:
             return '[ start: %s volume: %s notional: %s ]' % (
                     self.start,
                     self.volume,
                     self.notional)
 
-    def __init__(self, window, resolution):
+    def __init__(self, window: TimeDelta, resolution: TimeDelta):
         self.window = window
         self.resolution = resolution
         self.volume = 0
         self.notional = 0
         self.buckets = []
 
-    def onTime(self, time):
+    def onTime(self, time: Time) -> None:
         while self.buckets and self.buckets[0].start <= time - self.window:
             self.volume -= self.buckets[0].volume
             self.notional -= self.buckets[0].notional
@@ -26,7 +35,7 @@ class TrailingVWAP(object):
         if not self.buckets or self.buckets[-1].start + self.resolution <= time:
             self.buckets.append(TrailingVWAP.Bucket(time))
 
-    def onValue(self, time, price, size):
+    def onValue(self, time: Time, price: float, size: float) -> None:
         self.onTime(time)
         self.buckets[-1].volume += size
         self.buckets[-1].notional += size * price
@@ -34,7 +43,7 @@ class TrailingVWAP(object):
         self.volume += size
         self.notional += size * price
 
-    def getVWAP(self, time=None):
+    def getVWAP(self, time: Time=None) -> float:
         if time:
             self.onTime(time)
         if self.volume:
@@ -42,15 +51,15 @@ class TrailingVWAP(object):
         else:
             return None
 
-    def getVolume(self, time=None):
+    def getVolume(self, time: Time=None) -> float:
         if time:
             self.onTime(time)
         return self.volume
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join([str(x) for x in self.buckets]) + (" => %s" % (self.getVWAP()))
 
-if __name__ == "__main__":
+def runTests():
     from test import check
 
     s = TrailingVWAP(20, 4)
@@ -99,4 +108,6 @@ if __name__ == "__main__":
     check(s.getVWAP(), 2.50)
     check(s.getVolume(), 4)
 
+if __name__ == '__main__':
+    runTests()
 

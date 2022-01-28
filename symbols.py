@@ -4,33 +4,39 @@ from ibapi.contract import *
 import datetime
 import ib
 import autolist
+import typing
 
 TS_FMT = "%Y-%m-%d %H:%M:%S"
 
 lastSymbolId = 0
-def _nextSID():
+def _nextSID() -> int:
     global lastSymbolId
     lastSymbolId += 1
     return lastSymbolId
 
-def getSIDList(default=None):
+Type = typing.TypeVar("Type")
+def getSIDList(default: typing.Callable[[], Type]=None) -> autolist.AutoList[Type]:
     return autolist.AutoList(lastSymbolId + 1, default=default)
 
-class BounceEquity(Contract):
-    def __init__(self, symbol, exchange="SMART"):
+class BounceSymbol(object):
+    def __init__(self):
+        self.sid = _nextSID()
+
+class BounceEquity(BounceSymbol, Contract):
+    def __init__(self, symbol: str, exchange: str="SMART"):
+        BounceSymbol.__init__(self)
         Contract.__init__(self)
         self.symbol = symbol
         self.secType = "STK"
         self.currency = "USD"
         self.exchange = exchange
 
-        self.sid = _nextSID()
-
-    def __str__(self):
+    def __str__(self) -> str:
         return self.symbol
 
-class BounceOption(Contract):
-    def __init__(self, equitySymbol, putCall, expirationDate, strikePrice):
+class BounceOption(BounceSymbol, Contract):
+    def __init__(self, equitySymbol: str, putCall: Right, expirationDate: str, strikePrice: float):
+        BounceSymbol.__init__(self)
         Contract.__init__(self)
         self.symbol = equitySymbol
         self.secType = "OPT"
@@ -41,9 +47,7 @@ class BounceOption(Contract):
         self.strike = strikePrice
         self.multiplier = "100"
 
-        self.sid = _nextSID()
-
-    def __str__(self):
+    def __str__(self) -> str:
         return "[%s %s %s %s]" % (
                 self.symbol,
                 self.lastTradeDateOrContractMonth,
