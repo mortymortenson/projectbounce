@@ -1,12 +1,9 @@
-from enum import Enum
-from ibapi.contract import *
+from symbols import *
+from util import *
 import datetime
+import logging
 
-TS_FMT = "%Y-%m-%d %H:%M:%S"
-
-class Action(Enum):
-    Buy = 1
-    Sell = 2
+logger = logging.getLogger()
 
 class SupportType(Enum):
     Bounce = 1
@@ -14,59 +11,69 @@ class SupportType(Enum):
     Breakout = 3
     Breakdown = 4
 
-class BounceOption:
-    def __init__(self, equity_symbol, put_call, expiration_date, strike_price):
-        contract = Contract()
-        contract.symbol = equity_symbol
-        contract.secType = "OPT"
-        contract.currency = "USD"
-        contract.exchange = "ISE" # TODO
-        contract.lastTradeDateOrContractMonth = expiration_date
-        contract.right = put_call
-        contract.strike = strike_price
-        contract.multiplier = "100"
-        self.contract = contract
-        self.__repr__ = self.__str__
-
-    def __str__(self):
-        return "[%s %s %s %s]" % (
-                self.contract.symbol,
-                self.contract.lastTradeDateOrContractMonth,
-                self.contract.right,
-                self.contract.strike)
-
 class BounceTrade:
     def __init__(
             self,
-            ts,
-            signal_symbol,
-            threshold_price,
-            support_type,
-            trade_symbol,
-            ticks
+            ts: datetime.datetime,
+            signalSymbol: str,
+            thresholdPrice: float,
+            supportType: SupportType,
+            tradeSymbol: BounceSymbol,
+            ticks: float,
+            actuallySendOrder: bool=False
             ):
         self.ts = datetime.datetime.strptime(ts, TS_FMT)
-        self.signal_symbol = signal_symbol
-        self.threshold_price = threshold_price
-        self.support_type = support_type
-        self.trade_symbol = trade_symbol
+        self.signalSymbol = signalSymbol
+        self.thresholdPrice = thresholdPrice
+        self.supportType = supportType
+        self.tradeSymbol = tradeSymbol
         self.ticks = ticks
+        self.orderSent = False
+        self.actuallySendOrder = actuallySendOrder
         self.__repr__ = self.__str__
 
-    def onUpdate():
+    def onUpdate() -> None:
         pass
 
-    def onTrade(self, time, price, size, side):
-        pass
+    def shouldPlaceOrder(self):
+        return not self.orderSent and self.actuallySendOrder
 
-    def __str__(self):
+    def onOrderPlaced(self):
+        self.orderSent = True
+
+    def onTrade(self, time: datetime.datetime, price: float, size: float) -> TradeRequest:
+        if self.supportType == SupportType.Bounce:
+            if price <= self.thresholdPrice + self.ticks:
+                self._notify(price)
+                return TradeRequest(self.tradeSymbol, Action.Buy, None, 1)
+        elif self.supportType == SupportType.Reject:
+            if price >= self.thresholdPrice - self.ticks:
+                self._notify(price)
+                return TradeRequest(self.tradeSymbol, Action.Buy, None, 1)
+        elif self.supportType == SupportType.Breakout:
+            pass
+        elif self.supportType == SupportType.Breakdown:
+            pass
+
+    def _notify(self, lastTradePrice: float) -> None:
+        msg =(str(self.supportType) + " "
+                + str(self.signalSymbol) + " "
+                + str(self.thresholdPrice) + " "
+                + str(self.tradeSymbol) + " "
+                + "Last Trade: " + str(lastTradePrice))
+        final = "* " + msg + " *"
+        stars = "*" * len(final)
+        logger.info(logColor(stars, LogCyan))
+        logger.info(logColor(final, LogCyan))
+        logger.info(logColor(stars, LogCyan))
+
+    def __str__(self) -> str:
         return  (self.ts.strftime(TS_FMT) + " - "
-                + str(self.signal_symbol) + " "
-                + str(self.threshold_price) + " "
-                + str(self.support_type) + " "
-                + str(self.trade_symbol) + " "
+                + str(self.signalSymbol) + " "
+                + str(self.thresholdPrice) + " "
+                + str(self.supportType) + " "
+                + str(self.tradeSymbol) + " "
                 + str(self.ticks))
-
 bounces = []
 
 bounces.append(BounceTrade("2021-10-25 20:30:00", "DKNG", 46.00, SupportType.Bounce, BounceOption("DKNG", "C", "20211029", 48.00), 0.10))
@@ -112,12 +119,10 @@ bounces.append(BounceTrade("2021-11-29 9:00:00", "BA",206.50, SupportType.Bounce
 bounces.append(BounceTrade("2021-12-27 9:20:00", "TSLA",1060.00, SupportType.Bounce, BounceOption("TSLA", "C", "20211231", 1100.00), 0.10))
 bounces.append(BounceTrade("2021-12-27 9:20:00", "FB",336.00, SupportType.Bounce, BounceOption("FB", "C", "20211231", 340.00), 0.10))
 
+def runTests():
+    for b in bounces:
+        print(b)
 
-for b in bounces:
-    print(b)
+if __name__ == '__main__':
+    runTests()
 
-###### TODO ######
-# 3. Subscribe to market data
-# 4. Make a trade
-# 5. Track position
-# 6. Exit position
