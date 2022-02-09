@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 import datetime
 import logging
 import os
@@ -56,4 +56,42 @@ def setupLogger(base: str=None) -> None:
         console.setLevel(logging.DEBUG)
         console.setFormatter(logging.Formatter(recfmt))
         logger.addHandler(console)
+
+LogBlack        = '0;30'
+LogRed          = '0;31'
+LogGreen        = '0;32'
+LogBrownOrange  = '0;33'
+LogBlue         = '0;34'
+LogPurple       = '0;35'
+LogCyan         = '0;36'
+LogLightGray    = '0;37'
+LogDarkGray     = '1;30'
+LogLightRed     = '1;31'
+LogLightGreen   = '1;32'
+LogYellow       = '1;33'
+LogLightBlue    = '1;34'
+LogLightPurple  = '1;35'
+LogLightCyan    = '1;36'
+LogWhite        = '1;37'
+
+LOG_RESET_SEQ = r"\033[0m"
+LOG_COLOR_SEQ = r"\033[1;%dm"
+LOG_BOLD_SEQ = r"\033[1m"
+
+def logColor(s: str, color: str) -> str:
+    s = "\033[" + color + "m" + s + "\033[0m"
+    return s
+
+class Level:
+    def __init__(self):
+        self.price = 0
+        self.size = 0
+        self.count = 0
+
+class Book:
+    def __init__(self, symbol):
+        self.symbol = symbol
+        self.bid = Level()
+        self.ask = Level()
+
 

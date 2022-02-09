@@ -893,7 +893,7 @@ class BApp(BWrapper, BClient):
 
 def main(AppType: typing.Callable):
     logging.debug("now is %s", datetime.datetime.now())
-    logging.getLogger().setLevel(logging.ERROR)
+    logging.getLogger().setLevel(logging.INFO)
 
     cmdLineParser = argparse.ArgumentParser("api tests")
     # cmdLineParser.add_option("-c", action="store_True", dest="use_cache", default = False, help = "use the cache")

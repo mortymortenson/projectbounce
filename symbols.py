@@ -43,7 +43,10 @@ class BounceOption(BounceSymbol, Contract):
         self.currency = "USD"
         self.exchange = "ISE" # TODO
         self.lastTradeDateOrContractMonth = expirationDate
-        self.right = putCall
+        if putCall == Right.Call:
+            self.right = 'C'
+        else:
+            self.right = 'P'
         self.strike = strikePrice
         self.multiplier = "100"
 
